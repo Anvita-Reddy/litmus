@@ -8,14 +8,14 @@ pointed at financial data to show it generalizes.
 
 ## Checks
 
-- `feature_reliance` — permutation importance; ranks what the model actually
+- `feature_reliance` - permutation importance; ranks what the model actually
   depends on and auto-discovers shortcuts without being told where to look.
-- `proxy_detection` — trains a probe to reconstruct a protected attribute from
+- `proxy_detection` - trains a probe to reconstruct a protected attribute from
   the remaining features; measures whether dropping it actually removed it.
-- `worst_group` — per-subgroup accuracy; surfaces failures the average hides.
-- `predictive_multiplicity` — trains many equally-accurate models and measures
+- `worst_group` - per-subgroup accuracy; surfaces failures the average hides.
+- `predictive_multiplicity` - trains many equally-accurate models and measures
   how often they disagree on the same individual.
-- `temporal_leakage` — random split vs walk-forward; catches inflated backtest
+- `temporal_leakage` - random split vs walk-forward; catches inflated backtest
   scores on time-ordered data.
 
 ## Findings
