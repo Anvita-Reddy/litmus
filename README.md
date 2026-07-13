@@ -1,5 +1,7 @@
 # Litmus
 
+![tests](https://github.com/Anvita-Reddy/litmus/actions/workflows/tests.yml/badge.svg)
+
 A model-auditing toolkit that checks whether a classifier's accuracy is real, or
 inflated, unfair, or arbitrary. Litmus runs five checks against a trained model
 and reports where the headline number breaks down. Each check is validated on a
