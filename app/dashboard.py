@@ -15,6 +15,8 @@ R = json.loads(path.read_text())
 base, sc, proxy = R["baseline"], R["shortcut"], R["proxy"]
 mp_a, mp_m, leak = R["multiplicity_adult"], R["multiplicity_market"], R["leakage"]
 compas = R["compas"]
+credit = R["credit"]
+overfit = R["overfit"]
 
 RED = "#ff4d4d"
 GRAY = "#39414f"
@@ -95,15 +97,14 @@ def card(col, label, value, delta=None, kind="flat"):
                  f'<div class="metric-value">{value}</div>{d}</div>', unsafe_allow_html=True)
 
 
-# ── hero ────────────────────────────────────────────────────────────────
 st.markdown('<div class="hero-eyebrow">A model-auditing toolkit</div>', unsafe_allow_html=True)
 st.markdown('<div class="hero-title">How accurate is<br>your <em>accuracy?</em></div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="hero-sub">Litmus runs five audits against models that look fine on paper. '
+    '<div class="hero-sub">Litmus runs five checks against models that look fine on paper. '
     'Every detector is validated on planted ground truth, then pointed at real data, '
     'from census income to stock prediction to criminal risk scores.</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="hero-meta">XGBOOST · ADULT/CENSUS 45K · SPY DAILY 2010–2024 · COMPAS 5K DEFENDANTS · REPRODUCIBLE</div>',
+    '<div class="hero-meta">ADULT · SPY · COMPAS · GERMAN CREDIT · 200-STRATEGY BACKTEST · ALL REPRODUCIBLE</div>',
     unsafe_allow_html=True)
 
 st.page_link("pages/1_Audit_your_model.py", label="Audit your own model →")
@@ -231,8 +232,8 @@ with L:
         f'<div class="section-body">Same features, same model. With 20-day overlapping labels, a '
         f'shuffled backtest leaks near-duplicate days across the split and reads '
         f'<b>{leak["overlapping"]["random"]:.1%}</b>; walk-forward validation reads '
-        f'<b>{leak["overlapping"]["walkforward"]:.1%}</b>. On clean 1-day labels the two agree. '
-        f'the detector fires only when there is something to catch.</div>', unsafe_allow_html=True)
+        f'<b>{leak["overlapping"]["walkforward"]:.1%}</b>. On clean 1-day labels the two agree, '
+        f' and the detector fires only when there is something to catch.</div>', unsafe_allow_html=True)
 with Rt:
     cats = ["clean labels", "overlapping labels"]
     fig = go.Figure()
@@ -257,7 +258,40 @@ with Rt:
 st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
 
 # ── 6: COMPAS ──────────────────────────────────────────────────────────
-st.markdown('<div class="section-num">06 / CASE STUDY: COMPAS</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-num">06 / BACKTEST OVERFITTING</div>', unsafe_allow_html=True)
+st.markdown("### Test 200 random strategies and the best one looks fundable")
+st.markdown(
+    f'<div class="section-body">Selection bias is the quant version of an inflated accuracy. '
+    f'Generate {overfit["n_strategies"]} strategies from random feature subsets and random signs, '
+    f'with no real edge by construction. Rank them by in-sample Sharpe, and the winner reads '
+    f'<b>{overfit["best_in_sample"]:.2f}</b>. Evaluated out-of-sample, that same strategy collapses '
+    f'to <b>{overfit["best_out_sample"]:.2f}</b>. The Sharpe was selection noise, not signal.</div>',
+    unsafe_allow_html=True)
+_in = np.array(overfit["in_sample_all"])
+_out = np.array(overfit["out_sample_all"])
+_best_i = int(_in.argmax())
+fig = go.Figure()
+fig.add_trace(go.Scatter(
+    x=_in, y=_out, mode="markers",
+    marker=dict(size=7, color=GRAY, opacity=0.6, line=dict(width=0)),
+    name="random strategies",
+    hovertemplate="in-sample: %{x:.2f}<br>out-of-sample: %{y:.2f}<extra></extra>"))
+fig.add_trace(go.Scatter(
+    x=[_in[_best_i]], y=[_out[_best_i]], mode="markers",
+    marker=dict(size=15, color=RED, line=dict(width=1, color="#fff")),
+    name="best in-sample",
+    hovertemplate="THE WINNER<br>in-sample: %{x:.2f}<br>out-of-sample: %{y:.2f}<extra></extra>"))
+fig.add_hline(y=0, line_dash="dot", line_color=MUTED, line_width=1)
+fig.update_layout(**PLOT, height=420,
+    xaxis=dict(title="in-sample Sharpe (what you'd see picking the best)", gridcolor="#1c2330", zeroline=False),
+    yaxis=dict(title="out-of-sample Sharpe (what you'd actually get)", gridcolor="#1c2330", zeroline=False),
+    legend=dict(orientation="h", y=1.1, x=0, font=dict(size=12)))
+st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
+st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
+
+# ── 07: COMPAS ──────────────────────────────────────────────────────────
+st.markdown('<div class="section-num">07 / CASE STUDY: COMPAS</div>', unsafe_allow_html=True)
 st.markdown("### The risk score behind real bail decisions is partly a coin flip")
 cm = compas["multiplicity"]
 c_band_pct = substantial_pct(cm["frac_pos"], 0.2)
@@ -276,6 +310,30 @@ d1, d2, d3 = st.columns(3, gap="medium")
 card(d1, "model accuracy", f"{compas['acc']:.1%}", f"{compas['n']:,} DEFENDANTS", "flat")
 card(d2, "race reconstructed", f"{compas['proxy']['auc']:.2f}", "AUC · RACE REMOVED", "flat")
 card(d3, "contested defendants", f"{c_band_pct:.0f}%", "ACROSS 25 EQUAL MODELS", "down")
+
+st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
+
+# ── CTA ────────────────────────────────────────────────────────────────
+st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
+
+# ── 08: CREDIT ──────────────────────────────────────────────────────────
+st.markdown('<div class="section-num">08 / CASE STUDY: CREDIT RISK</div>', unsafe_allow_html=True)
+st.markdown("### A loan model that reconstructs sex after you remove it")
+crm = credit["multiplicity"]
+cr_band = substantial_pct(crm["frac_pos"], 0.2)
+st.markdown(
+    f'<div class="section-body">A default-risk model on the German Credit data '
+    f'({credit["n"]:,} loan applicants) scores <b>{credit["acc"]:.1%}</b>. Fair-lending law '
+    f'(ECOA) prohibits using protected attributes like sex or age in credit decisions. But with '
+    f'<code>{credit["protected"]}</code> removed, a probe rebuilds it at '
+    f'<b>{credit["proxy"]["auc"]:.2f} AUC</b> from the remaining features. Removing the column '
+    f'is not the same as removing the information, and <b>{cr_band:.0f}%</b> of applicants get '
+    f'conflicting decisions across equally-accurate models.</div>', unsafe_allow_html=True)
+
+e1, e2, e3 = st.columns(3, gap="medium")
+card(e1, "model accuracy", f"{credit['acc']:.1%}", f"{credit['n']:,} APPLICANTS", "flat")
+card(e2, f"{credit['protected']} reconstructed", f"{credit['proxy']['auc']:.2f}", "AUC · ATTR REMOVED", "flat")
+card(e3, "contested applicants", f"{cr_band:.0f}%", "ACROSS 25 EQUAL MODELS", "down")
 
 st.markdown('<div class="spacer"></div>', unsafe_allow_html=True)
 

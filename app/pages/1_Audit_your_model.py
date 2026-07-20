@@ -11,7 +11,7 @@ import streamlit as st
 
 from audit import feature_reliance, proxy_detection, worst_group, predictive_multiplicity
 
-st.set_page_config(page_title="Litmus — audit your model", page_icon="◆", layout="centered")
+st.set_page_config(page_title="Litmus - audit your model", page_icon="◆", layout="centered")
 
 st.markdown("""
 <style>
@@ -29,7 +29,7 @@ st.markdown(
 )
 st.caption(
     "Limits: sklearn-API models only · CSV up to 50k rows · features must match the model's "
-    "training columns. Only upload files you trust — model files execute code when loaded."
+    "training columns. Only upload files you trust - model files execute code when loaded."
 )
 
 model_file = st.file_uploader("model file", type=["pkl", "joblib"])
