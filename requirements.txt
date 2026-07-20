@@ -4,3 +4,6 @@ scikit-learn
 xgboost
 ucimlrepo
 yfinance
+streamlit
+plotly
+joblib
