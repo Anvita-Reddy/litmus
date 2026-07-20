@@ -5,7 +5,7 @@ import numpy as np
 import streamlit as st
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="Litmus - how accurate is your accuracy?", layout="wide")
+st.set_page_config(page_title="Litmus", layout="wide")
 
 path = Path(__file__).parent.parent / "results.json"
 if not path.exists():
